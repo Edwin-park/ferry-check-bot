@@ -1,5 +1,6 @@
 import os
 import requests
+from collections import defaultdict
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
@@ -42,19 +43,28 @@ def check_ferry(date: str):
             send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ {date} 배편이 없습니다.")
             return
 
-        lines = [f"🛳️ {date} 배편 현황 ({len(result_all)}건)"]
+        # 선박 기준으로 묶기
+        grouped = defaultdict(list)
         for item in result_all:
-            vessel = item.get("vessel", "선박명 없음")
-            seat = item.get("classes", "좌석 정보 없음")
-            departure = item.get("f_port", "출발지 없음") + " " + item.get("departure", "시간 없음")
-            arrival = item.get("t_port", "도착지 없음") + " " + item.get("arrival", "시간 없음")
-            duration = item.get("requiredtime", "소요시간 없음")
-            onlinecnt = int(item.get("onlinecnt", 0))
-            capacity = int(item.get("capacity", 0))
-
-            lines.append(
-                f"- {vessel} / {seat}\n  {departure} → {arrival} ({duration})\n  잔여석: {onlinecnt} / 정원: {capacity}"
+            key = (
+                item.get("vessel", "선박명 없음"),
+                item.get("f_port", "출발지 없음"),
+                item.get("departure", "시간 없음"),
+                item.get("t_port", "도착지 없음"),
+                item.get("arrival", "시간 없음"),
+                item.get("requiredtime", "소요시간 없음")
             )
+            grouped[key].append(item)
+
+        lines = [f"🛳️ {date} 배편 현황"]
+        for (vessel, f_port, dep_time, t_port, arr_time, duration), items in grouped.items():
+            lines.append(f"- {vessel} ({f_port} {dep_time} → {t_port} {arr_time} / {duration})")
+            for item in items:
+                seat_name = item.get("classes", "좌석")
+                seat_simple = "일반" if "일반" in seat_name else "우등" if "우등" in seat_name else seat_name
+                online = int(item.get("onlinecnt", 0))
+                total = int(item.get("capacity", 0))
+                lines.append(f"  • {seat_simple} ({online}/{total})")
 
         message = "\n".join(lines)
         send_telegram_message(BOT_TOKEN, CHAT_ID, message)
