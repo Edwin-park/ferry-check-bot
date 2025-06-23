@@ -73,7 +73,7 @@ if __name__ == "__main__":
         info = get_ferry_info(date)
         all_messages.append(info)
 
-    all_messages.append("\n📌 설정\n• 날짜: 2025-08-30, 2025-09-13\n• 알림 주기: 15분\n• 작동 시간: 24시간")
+    all_messages.append("\n📌 설정\n• 날짜: 2025-08-30, 2025-09-13\n")
 
     final_message = "\n\n".join(all_messages)
     send_telegram_message(BOT_TOKEN, CHAT_ID, final_message)
