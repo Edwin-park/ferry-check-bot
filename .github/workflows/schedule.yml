@@ -1,21 +1,24 @@
-name: Check Ferry Ticket
+name: Check Ferry Schedule
 
 on:
   schedule:
-    - cron: "*/10 * * * *"  # 10분마다 실행 (UTC 기준, 한국시간 기준은 +9시간)
-  workflow_dispatch:       # 수동 실행도 가능하게
+    - cron: "0 * * * *"   # 매시 0분마다 (즉, 매시간 정각에 실행)
+  workflow_dispatch:       # 수동 실행도 가능하게 설정
 
 jobs:
-  check:
+  run-script:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: 3.11
+
       - name: Install dependencies
         run: pip install requests
+
       - name: Run script
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
