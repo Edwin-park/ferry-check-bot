@@ -38,18 +38,14 @@ def check_ferry(date: str):
         response.raise_for_status()
         result_all = response.json().get("data", {}).get("resultAll", [])
 
-        if not result_all:
-            send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ {date} 배편이 없습니다.")
-            return
-
-        lines = [f"🛳️ {date} 배편 현황 ({len(result_all)}건)"]
+        lines = []
 
         for item in result_all:
             ships = item.get("ships", [])
             if not ships:
-                continue  # ships 데이터가 없으면 건너뜀
+                continue  # ships 비어있으면 건너뜀
 
-            ship = ships[0]  # 첫 번째 선박 정보 사용
+            ship = ships[0]
             vessel = ship.get("vessel", "선박명 없음")
             seat = ship.get("classes", "좌석 없음")
             departure = ship.get("departure", "출발지 없음")
@@ -62,7 +58,11 @@ def check_ferry(date: str):
                 f"- {vessel} / {seat}\n  {departure} → {arrival} ({duration})\n  잔여석: {onlinecnt}석 / 정원: {capacity}석"
             )
 
-        message = "\n".join(lines)
+        if lines:
+            message = f"🛳️ {date} 배편 현황 ({len(lines)}건)\n" + "\n\n".join(lines)
+        else:
+            message = f"❗ {date} 배편이 없습니다."
+
         send_telegram_message(BOT_TOKEN, CHAT_ID, message)
 
     except Exception as e:
