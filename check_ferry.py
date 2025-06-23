@@ -25,9 +25,9 @@ def check_ferry(date: str):
     }
     data = {
         "masterdate": date,
-        "t_portsubidlist": "1",
+        "t_portsubidlist": "1",    # 울릉 저동
         "t_portidlist": "4311",
-        "f_portsubidlist": "0",
+        "f_portsubidlist": "0",    # 강릉
         "f_portidlist": "4406",
         "lang": "ko",
         "sourcesiteid": "1PHSOBKSACLAIOD1XZMZ"
@@ -36,20 +36,28 @@ def check_ferry(date: str):
     try:
         response = requests.post(url, headers=headers, data=data)
         response.raise_for_status()
-        res_json = response.json()
-
-        # ✅ JSON 응답 전체 출력
-        print("🟨 받은 JSON 응답 구조:")
-        print(res_json)
-
-        result_all = res_json.get("data", {}).get("resultAll", [])
+        result_all = response.json().get("data", {}).get("resultAll", [])
 
         if not result_all:
             send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ {date} 배편이 없습니다.")
             return
 
-        # 이후 생략해도 됨
-        ...
+        lines = [f"🛳️ {date} 배편 현황 ({len(result_all)}건)"]
+        for item in result_all:
+            vessel = item.get("vessel", "선박명 없음")
+            seat = item.get("classes", "좌석 정보 없음")
+            departure = item.get("f_port", "출발지 없음") + " " + item.get("departure", "시간 없음")
+            arrival = item.get("t_port", "도착지 없음") + " " + item.get("arrival", "시간 없음")
+            duration = item.get("requiredtime", "소요시간 없음")
+            onlinecnt = int(item.get("onlinecnt", 0))
+            capacity = int(item.get("capacity", 0))
+
+            lines.append(
+                f"- {vessel} / {seat}\n  {departure} → {arrival} ({duration})\n  잔여석: {onlinecnt} / 정원: {capacity}"
+            )
+
+        message = "\n".join(lines)
+        send_telegram_message(BOT_TOKEN, CHAT_ID, message)
 
     except Exception as e:
         send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ [{date}] 오류 발생: {e}")
