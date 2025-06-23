@@ -1,26 +1,27 @@
-name: Check Ferry
+name: Check Ferry Schedule
 
 on:
   schedule:
-    - cron: '0,15,30,45 * * * *'  # 매 시간 0, 15, 30, 45분에 실행
-  workflow_dispatch:
+    # 매일 15분마다 실행 (UTC 기준 — 한국시간 +9시간)
+    - cron: '0,15,30,45 * * * *'
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
-      - name: Install requests
+      - name: Install requests library
         run: pip install requests
 
-      - name: Run script
+      - name: Run check_ferry.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
