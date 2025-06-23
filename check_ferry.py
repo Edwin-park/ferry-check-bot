@@ -41,7 +41,7 @@ if __name__ == "__main__":
     else:
         for r in results:
             msg = f"""🛳️ 배편 정보 ({date})
-{r.get('depportname', '출발지 정보 없음')} → {r.get('arrportname', '도착지 정보 없음')} ({r.get('shipname', '선박명 없음')})
+{r.get('depportname', '출발지 없음')} → {r.get('arrportname', '도착지 없음')} ({r.get('shipname', '선박명 없음')})
 출발 시간: {r.get('depplandate', date)} {r.get('depplantime', '시간 없음')}
 잔여석: {r.get('remcnt', '미표시')}석"""
             send_telegram_message(BOT_TOKEN, CHAT_ID, msg)
