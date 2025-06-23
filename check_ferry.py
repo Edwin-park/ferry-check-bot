@@ -22,9 +22,9 @@ def check_ferry(date):
     }
     data = {
         "masterdate": date,
-        "t_portsubidlist": "1",      # 출발: 강릉
+        "t_portsubidlist": "1",
         "t_portidlist": "4311",
-        "f_portsubidlist": "0",      # 도착: 울릉 저동
+        "f_portsubidlist": "0",
         "f_portidlist": "4406",
         "lang": "ko",
         "sourcesiteid": "1PHSOBKSACLAIOD1XZMZ"
@@ -40,8 +40,15 @@ if __name__ == "__main__":
         send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ {date} 배편 정보가 없습니다.")
     else:
         for r in results:
+            # 안전한 키 접근
+            depport = r.get("depportname", "출발지 정보 없음")
+            arrport = r.get("arrportname", "도착지 정보 없음")
+            ship = r.get("shipname", "선박명 없음")
+            time = f"{r.get('depplandate', '날짜없음')} {r.get('depplantime', '시간없음')}"
+            seat = r.get("remcnt", "잔여석 정보 없음")
+
             msg = f"""🛳️ 배편 정보 ({date})
-{r['depportname']} → {r['arrportname']} ({r['shipname']})
-출발 시간: {r['depplandate']} {r['depplantime']}
-잔여석: {r.get('remcnt', '정보 없음')}석"""
+{depport} → {arrport} ({ship})
+출발 시간: {time}
+잔여석: {seat}석"""
             send_telegram_message(BOT_TOKEN, CHAT_ID, msg)
