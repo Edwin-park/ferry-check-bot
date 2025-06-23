@@ -2,7 +2,7 @@ name: Check Ferry Schedule
 
 on:
   schedule:
-    # 매일 15분마다 실행 (UTC 기준 — 한국시간 +9시간)
+    # 매일 15분 간격으로 실행 (UTC 기준: 한국 시간은 +9시간)
     - cron: '0,15,30,45 * * * *'
 
 jobs:
