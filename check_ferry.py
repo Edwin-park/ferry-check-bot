@@ -58,13 +58,12 @@ def check_ferry(date: str):
 
         lines = [f"🛳️ {date} 배편 현황"]
         for (vessel, f_port, dep_time, t_port, arr_time, duration), items in grouped.items():
-            lines.append(f"- {vessel} ({f_port} {dep_time} → {t_port} {arr_time} / {duration})")
-            for item in items:
-                seat_name = item.get("classes", "좌석")
-                seat_simple = "일반" if "일반" in seat_name else "우등" if "우등" in seat_name else seat_name
-                online = int(item.get("onlinecnt", 0))
-                total = int(item.get("capacity", 0))
-                lines.append(f"  • {seat_simple} ({online}/{total})")
+        lines.append(f"- {vessel} ({f_port} {dep_time} → {t_port} {arr_time} / {duration})")
+        for item in items:
+            seat_name = item.get("classes", "좌석")  # 예: 일반석, 우등석
+            online = int(item.get("onlinecnt", 0))
+            total = int(item.get("capacity", 0))
+            lines.append(f"  • {seat_name} (잔여 {online} / 정원 {total})")
 
         message = "\n".join(lines)
         send_telegram_message(BOT_TOKEN, CHAT_ID, message)
