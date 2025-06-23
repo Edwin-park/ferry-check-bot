@@ -97,7 +97,7 @@ def check_ferry(date_list):
 
     # 메시지 전송 조건
     minute = now.minute
-    should_send = False
+    should_send = True
     if sep13_found:
         should_send = True
     elif minute == 0:
