@@ -2,9 +2,11 @@ import os
 import requests
 from collections import defaultdict
 
+# 환경변수에서 토큰, 챗 ID 가져오기
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
+# 텔레그램 메시지 전송 함수
 def send_telegram_message(bot_token, chat_id, message):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {"chat_id": chat_id, "text": message}
@@ -14,6 +16,7 @@ def send_telegram_message(bot_token, chat_id, message):
     except Exception as e:
         print("❗ 텔레그램 전송 오류:", e)
 
+# 배편 조회 함수
 def check_ferry(date: str):
     url = "https://island.theksa.co.kr/booking/selectDepartureList"
     headers = {
@@ -26,9 +29,9 @@ def check_ferry(date: str):
     }
     data = {
         "masterdate": date,
-        "t_portsubidlist": "1",    # 울릉 저동
+        "t_portsubidlist": "1",    # 출발: 강릉
         "t_portidlist": "4311",
-        "f_portsubidlist": "0",    # 강릉
+        "f_portsubidlist": "0",    # 도착: 울릉 저동
         "f_portidlist": "4406",
         "lang": "ko",
         "sourcesiteid": "1PHSOBKSACLAIOD1XZMZ"
@@ -43,7 +46,7 @@ def check_ferry(date: str):
             send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ {date} 배편이 없습니다.")
             return
 
-        # 선박 기준으로 묶기
+        # 같은 선박+시간을 묶어서 좌석 종류만 나누기
         grouped = defaultdict(list)
         for item in result_all:
             key = (
@@ -58,12 +61,12 @@ def check_ferry(date: str):
 
         lines = [f"🛳️ {date} 배편 현황"]
         for (vessel, f_port, dep_time, t_port, arr_time, duration), items in grouped.items():
-        lines.append(f"- {vessel} ({f_port} {dep_time} → {t_port} {arr_time} / {duration})")
-        for item in items:
-            seat_name = item.get("classes", "좌석")  # 예: 일반석, 우등석
-            online = int(item.get("onlinecnt", 0))
-            total = int(item.get("capacity", 0))
-            lines.append(f"  • {seat_name} (잔여 {online} / 정원 {total})")
+            lines.append(f"- {vessel} ({f_port} {dep_time} → {t_port} {arr_time} / {duration})")
+            for item in items:
+                seat_name = item.get("classes", "좌석")
+                online = int(item.get("onlinecnt", 0))
+                total = int(item.get("capacity", 0))
+                lines.append(f"  • {seat_name} (잔여 {online} / 정원 {total})")
 
         message = "\n".join(lines)
         send_telegram_message(BOT_TOKEN, CHAT_ID, message)
@@ -71,5 +74,6 @@ def check_ferry(date: str):
     except Exception as e:
         send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ [{date}] 오류 발생: {e}")
 
+# ✅ 실행 부분
 if __name__ == "__main__":
     check_ferry("2025-08-30")
