@@ -36,34 +36,20 @@ def check_ferry(date: str):
     try:
         response = requests.post(url, headers=headers, data=data)
         response.raise_for_status()
-        result_all = response.json().get("data", {}).get("resultAll", [])
+        res_json = response.json()
 
-        lines = []
+        # ✅ JSON 응답 전체 출력
+        print("🟨 받은 JSON 응답 구조:")
+        print(res_json)
 
-        for item in result_all:
-            ships = item.get("ships", [])
-            if not ships:
-                continue  # ships 비어있으면 건너뜀
+        result_all = res_json.get("data", {}).get("resultAll", [])
 
-            ship = ships[0]
-            vessel = ship.get("vessel", "선박명 없음")
-            seat = ship.get("classes", "좌석 없음")
-            departure = ship.get("departure", "출발지 없음")
-            arrival = ship.get("arrival", "도착지 없음")
-            duration = ship.get("requiredtime", "소요시간 없음")
-            onlinecnt = int(ship.get("onlinecnt", 0))
-            capacity = int(ship.get("capacity", 0))
+        if not result_all:
+            send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ {date} 배편이 없습니다.")
+            return
 
-            lines.append(
-                f"- {vessel} / {seat}\n  {departure} → {arrival} ({duration})\n  잔여석: {onlinecnt}석 / 정원: {capacity}석"
-            )
-
-        if lines:
-            message = f"🛳️ {date} 배편 현황 ({len(lines)}건)\n" + "\n\n".join(lines)
-        else:
-            message = f"❗ {date} 배편이 없습니다."
-
-        send_telegram_message(BOT_TOKEN, CHAT_ID, message)
+        # 이후 생략해도 됨
+        ...
 
     except Exception as e:
         send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ [{date}] 오류 발생: {e}")
