@@ -82,4 +82,4 @@ def check_ferry(date: str):
         send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ [{date}] 오류 발생: {e}")
 
 if __name__ == "__main__":
-    check_ferry("2025-08-30")
+    check_ferry("2025-08-31")
