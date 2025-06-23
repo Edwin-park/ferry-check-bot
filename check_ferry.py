@@ -47,20 +47,18 @@ def check_ferry(date_list):
             response.raise_for_status()
             result_all = response.json().get("data", {}).get("resultAll", [])
 
-            if not result_all:
-                if date == "2025-09-13":
-                    sep13_found = False
-                continue
-
-            if date == "2025-09-13":
+            if date == "2025-09-13" and result_all:
                 sep13_found = True
 
-            lines = [f"🛳️ {date} 배편 현황"]
+            if not result_all:
+                continue
+
+            lines = [f"🚣️ {date} 배편 현황"]
             route_groups = {}
 
             for item in result_all:
                 vessel = item.get("vessel", "선박명 없음")
-                seat_class = item.get("classes", "좌석 없음")
+                seat_class = item.get("classes", "자리 없음")
                 departure = item.get("f_port", "출발지 없음") + " " + item.get("departure", "시간 없음")
                 arrival = item.get("t_port", "도착지 없음") + " " + item.get("arrival", "시간 없음")
                 duration = item.get("requiredtime", "소요시간 없음")
@@ -82,22 +80,38 @@ def check_ferry(date_list):
         except Exception as e:
             send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ [{date}] 오류 발생: {e}")
 
-    # 현재 시각 확인 후 조건에 따라 메시지 전송
+    # 현재 시간 출력
     now = datetime.now()
-    minute = now.minute
-    hour_str = now.strftime("%H:%M")
+    now_str = now.strftime("%Y-%m-%d %H:%M")
 
-    if minute % 15 == 0:
-        if minute == 0 or sep13_found:
-            setting = (
-                "\n\n📌 설정\n"
-                "• 날짜: 2025-08-30, 2025-09-13\n"
-                "• 알림 주기: 15분\n"
-                "• 작동 시간: 24시간"
-            )
-            current_time = f"⏰ 현재 시각: {hour_str}"
-            message = f"{current_time}\n" + "\n".join(summary_lines) + setting
-            send_telegram_message(BOT_TOKEN, CHAT_ID, message)
+    # 날짜 순서 정렬
+    ordered_dates = ["2025-08-30", "2025-09-13"]
+    summary_lines_ordered = []
+    for date in ordered_dates:
+        summary_lines_for_date = [
+            line for line in summary_lines 
+            if line.startswith(f"🚣️ {date}") or line.startswith("- ") or line.startswith("  •")
+        ]
+        if summary_lines_for_date:
+            summary_lines_ordered.extend(summary_lines_for_date)
+
+    # 메시지 전송 조건
+    minute = now.minute
+    should_send = False
+    if sep13_found:
+        should_send = True
+    elif minute == 0:
+        should_send = True
+
+    if should_send:
+        current_time = f"📆 현재시간: {now_str}"
+        setting = (
+            "\n\n📌 설정\n"
+            "• 날짜: 2025-08-30, 2025-09-13\n"
+            "• 작동 시간: 24시간"
+        )
+        message = current_time + "\n\n" + "\n".join(summary_lines_ordered) + setting
+        send_telegram_message(BOT_TOKEN, CHAT_ID, message)
 
 # ✅ 실행 부분
 if __name__ == "__main__":
