@@ -22,9 +22,9 @@ def check_ferry(date):
     }
     data = {
         "masterdate": date,
-        "t_portsubidlist": "1",      # 출발: 강릉
+        "t_portsubidlist": "1",
         "t_portidlist": "4311",
-        "f_portsubidlist": "0",      # 도착: 울릉 저동
+        "f_portsubidlist": "0",
         "f_portidlist": "4406",
         "lang": "ko",
         "sourcesiteid": "1PHSOBKSACLAIOD1XZMZ"
