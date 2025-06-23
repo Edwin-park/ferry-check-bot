@@ -1,15 +1,15 @@
-name: Check Ferry Tickets
+name: Check Ferry
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # ⏰ 24시간 내내 15분마다 실행
-  workflow_dispatch:        # 수동 실행도 가능
+    - cron: '0,15,30,45 * * * *'  # 매 시간 0, 15, 30, 45분에 실행
+  workflow_dispatch:
 
 jobs:
-  check:
+  run-script:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install requests
         run: pip install requests
 
       - name: Run script
