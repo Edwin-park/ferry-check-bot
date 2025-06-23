@@ -13,7 +13,7 @@ def send_telegram_message(bot_token, chat_id, message):
     except Exception as e:
         print("❗ 텔레그램 전송 오류:", e)
 
-def fetch_and_send(date: str):
+def get_ferry_info(date: str) -> str:
     url = "https://island.theksa.co.kr/booking/selectDepartureList"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -25,9 +25,9 @@ def fetch_and_send(date: str):
     }
     data = {
         "masterdate": date,
-        "t_portsubidlist": "1",  # 출발: 강릉
+        "t_portsubidlist": "1",
         "t_portidlist": "4311",
-        "f_portsubidlist": "0",  # 도착: 울릉 저동
+        "f_portsubidlist": "0",
         "f_portidlist": "4406",
         "lang": "ko",
         "sourcesiteid": "1PHSOBKSACLAIOD1XZMZ"
@@ -36,32 +36,44 @@ def fetch_and_send(date: str):
     try:
         response = requests.post(url, headers=headers, data=data)
         response.raise_for_status()
-        results = response.json().get("data", {}).get("resultAll", [])
+        result_all = response.json().get("data", {}).get("resultAll", [])
 
-        if not results:
-            send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ {date} 배편이 없습니다.")
-            return
+        if not result_all:
+            return f"🛳️ {date} 배편 없음"
+
+        grouped = {}
+        for item in result_all:
+            vessel = item.get("vessel", "선박명 없음")
+            departure = item.get("departure", "출발지 없음")
+            arrival = item.get("arrival", "도착지 없음")
+            duration = item.get("requiredtime", "소요시간 없음")
+            seat_type = item.get("classes", "좌석 없음")
+            onlinecnt = int(item.get("onlinecnt", 0))
+            capacity = int(item.get("capacity", 0))
+
+            key = (vessel, departure, arrival, duration)
+            grouped.setdefault(key, []).append((seat_type, onlinecnt, capacity))
 
         lines = [f"🛳️ {date} 배편 현황"]
-        grouped = {}
-
-        for r in results:
-            key = (r["vessel"], r["departure"], r["arrival"], r["requiredtime"])
-            if key not in grouped:
-                grouped[key] = []
-            grouped[key].append((r["classes"], int(r["onlinecnt"]), int(r["capacity"])))
-
         for (vessel, dep, arr, duration), seats in grouped.items():
-            lines.append(f"- {vessel} (강릉 {dep} → 울릉_저동 {arr} / {duration})")
-            for seat_name, online, total in seats:
-                lines.append(f"  • {seat_name}석 (잔여 {online} / 정원 {total})")
+            lines.append(f"- {vessel} ({dep} → {arr} / {duration})")
+            for seat_type, online, cap in seats:
+                lines.append(f"  • {seat_type}석 (잔여 {online} / 정원 {cap})")
 
-        send_telegram_message(BOT_TOKEN, CHAT_ID, "\n".join(lines))
+        return "\n".join(lines)
 
     except Exception as e:
-        send_telegram_message(BOT_TOKEN, CHAT_ID, f"❗ [{date}] 오류 발생: {e}")
+        return f"❗ [{date}] 오류 발생: {e}"
 
-# ✅ 여러 날짜 확인
 if __name__ == "__main__":
-    for date in ["2025-08-30", "2025-09-13"]:
-        fetch_and_send(date)
+    dates = ["2025-08-30", "2025-09-13"]
+    all_messages = []
+
+    for date in dates:
+        info = get_ferry_info(date)
+        all_messages.append(info)
+
+    all_messages.append("\n📌 설정\n• 날짜: 2025-08-30, 2025-09-13\n• 알림 주기: 15분\n• 작동 시간: 24시간")
+
+    final_message = "\n\n".join(all_messages)
+    send_telegram_message(BOT_TOKEN, CHAT_ID, final_message)
