@@ -58,7 +58,7 @@ def get_ferry_info(date: str) -> str:
         for (vessel, dep, arr, duration), seats in grouped.items():
             lines.append(f"- {vessel} ({dep} → {arr} / {duration})")
             for seat_type, online, cap in seats:
-                lines.append(f"  • {seat_type}석 (잔여 {online} / 정원 {cap})")
+                lines.append(f"  • {seat_type} (잔여 {online} / 정원 {cap})")
 
         return "\n".join(lines)
 
