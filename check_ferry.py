@@ -1,9 +1,12 @@
 import os
 import requests
+from datetime import datetime
 
+# 환경변수에서 토큰, 챗 ID 가져오기
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
+# 텔레그램 메시지 전송 함수
 def send_telegram_message(bot_token, chat_id, message):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {"chat_id": chat_id, "text": message}
@@ -13,6 +16,7 @@ def send_telegram_message(bot_token, chat_id, message):
     except Exception as e:
         print("❗ 텔레그램 전송 오류:", e)
 
+# 날짜별 배편 조회 함수
 def get_ferry_info(date: str) -> str:
     url = "https://island.theksa.co.kr/booking/selectDepartureList"
     headers = {
@@ -44,8 +48,8 @@ def get_ferry_info(date: str) -> str:
         grouped = {}
         for item in result_all:
             vessel = item.get("vessel", "선박명 없음")
-            departure = item.get("departure", "출발지 없음")
-            arrival = item.get("arrival", "도착지 없음")
+            departure = item.get("departure", "출발시간 없음")
+            arrival = item.get("arrival", "도착시간 없음")
             duration = item.get("requiredtime", "소요시간 없음")
             seat_type = item.get("classes", "좌석 없음")
             onlinecnt = int(item.get("onlinecnt", 0))
@@ -65,15 +69,9 @@ def get_ferry_info(date: str) -> str:
     except Exception as e:
         return f"❗ [{date}] 오류 발생: {e}"
 
+# ✅ 실행
 if __name__ == "__main__":
     dates = ["2025-08-30", "2025-09-13"]
     all_messages = []
 
-    for date in dates:
-        info = get_ferry_info(date)
-        all_messages.append(info)
-
-    all_messages.append("\n📌 설정\n• 날짜: 2025-08-30, 2025-09-13\n• 알림 주기: 15분\n• 작동 시간: 24시간")
-
-    final_message = "\n\n".join(all_messages)
-    send_telegram_message(BOT_TOKEN, CHAT_ID, final_message)
+    # 현재 시각 맨 위에 추가
