@@ -2,8 +2,9 @@ name: Check Ferry Schedule
 
 on:
   schedule:
-    # 매일 15분 간격으로 실행 (UTC 기준: 한국 시간은 +9시간)
+    # 매일 15분 간격 실행 (UTC 기준: 한국은 +9시간)
     - cron: '0,15,30,45 * * * *'
+  workflow_dispatch:  # ✅ 수동 실행 트리거 추가
 
 jobs:
   run-script:
@@ -18,7 +19,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install requests library
+      - name: Install dependencies
         run: pip install requests
 
       - name: Run check_ferry.py
