@@ -66,14 +66,14 @@ def get_ferry_info(date: str) -> str:
         return f"❗ [{date}] 오류 발생: {e}"
 
 if __name__ == "__main__":
-    dates = ["2025-08-30", "2025-09-13"]
+    dates = ["2025-09-13", "2025-08-30"]
     all_messages = []
 
     for date in dates:
         info = get_ferry_info(date)
         all_messages.append(info)
 
-    all_messages.append("\n📌 설정\n• 날짜: 2025-08-30, 2025-09-13\n")
+    all_messages.append("\n📌 설정\n• 날짜: 2025-09-13, 2025-08-30\n")
 
     final_message = "\n\n".join(all_messages)
     send_telegram_message(BOT_TOKEN, CHAT_ID, final_message)
