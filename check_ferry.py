@@ -39,7 +39,7 @@ def get_ferry_info(date: str) -> str:
         result_all = response.json().get("data", {}).get("resultAll", [])
 
         if not result_all:
-            return f"🛳️ {date} 배편 없음"
+            return f"\n🛳️ {date} 배편 없음"
 
         grouped = {}
         for item in result_all:
@@ -54,7 +54,7 @@ def get_ferry_info(date: str) -> str:
             key = (vessel, departure, arrival, duration)
             grouped.setdefault(key, []).append((seat_type, onlinecnt, capacity))
 
-        lines = [f"\n🛳️ {date} 배편 현황"]
+        lines = [f"🛳️ {date} 배편 현황"]
         for (vessel, dep, arr, duration), seats in grouped.items():
             lines.append(f"- {vessel} ({dep} → {arr} / {duration})")
             for seat_type, online, cap in seats:
