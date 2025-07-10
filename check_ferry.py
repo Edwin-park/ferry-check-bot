@@ -1,11 +1,9 @@
 import os
 import requests
 
-# 환경변수에서 BOT_TOKEN, CHAT_ID 가져오기
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
-# 텔레그램 메시지 전송 함수
 def send_telegram_message(bot_token, chat_id, message):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {"chat_id": chat_id, "text": message}
@@ -15,8 +13,17 @@ def send_telegram_message(bot_token, chat_id, message):
     except Exception as e:
         print("❗ 텔레그램 전송 오류:", e)
 
-# 날짜별 배편 정보 조회 함수
-def get_ferry_info(date: str, t_portid: str, f_portid: str, title: str) -> str:
+def get_ferry_info(date: str, t_portid: str, f_portid: str, direction: str, title: str) -> str:
+    # 방향별로 portsubid 설정
+    if direction == "go":  # 강릉 → 울릉도
+        t_subid = "1"
+        f_subid = "0"
+    elif direction == "return":  # 울릉도 → 강릉
+        t_subid = "0"
+        f_subid = "1"
+    else:
+        return f"❗ 잘못된 방향 지정: {direction}"
+
     url = "https://island.theksa.co.kr/booking/selectDepartureList"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -28,9 +35,9 @@ def get_ferry_info(date: str, t_portid: str, f_portid: str, title: str) -> str:
     }
     data = {
         "masterdate": date,
-        "t_portsubidlist": "1",
+        "t_portsubidlist": t_subid,
         "t_portidlist": t_portid,
-        "f_portsubidlist": "0",
+        "f_portsubidlist": f_subid,
         "f_portidlist": f_portid,
         "lang": "ko",
         "sourcesiteid": "1PHSOBKSACLAIOD1XZMZ"
@@ -68,27 +75,24 @@ def get_ferry_info(date: str, t_portid: str, f_portid: str, title: str) -> str:
     except Exception as e:
         return f"❗ {title} ({date}) 오류 발생: {e}"
 
-# 메인 실행
 if __name__ == "__main__":
-    # 날짜 및 방향 설정: (날짜, 출발지 ID, 도착지 ID, 설명)
+    # (날짜, 출발지 ID, 도착지 ID, 방향, 설명)
     routes = [
-        ("2025-09-13", "4311", "4406", "가는 편: 강릉 → 울릉도"),
-        ("2025-09-14", "4406", "4311", "오는 편: 울릉도 → 강릉"),
-        ("2025-09-15", "4406", "4311", "오는 편: 울릉도 → 강릉"),
+        ("2025-09-13", "4311", "4406", "go", "가는 편: 강릉 → 울릉도"),
+        ("2025-09-14", "4406", "4311", "return", "오는 편: 울릉도 → 강릉"),
+        ("2025-09-15", "4406", "4311", "return", "오는 편: 울릉도 → 강릉"),
     ]
 
     all_messages = []
-    for date, t_port, f_port, title in routes:
-        info = get_ferry_info(date, t_port, f_port, title)
+    for date, t_port, f_port, direction, title in routes:
+        info = get_ferry_info(date, t_port, f_port, direction, title)
         all_messages.append(info)
 
-    # 설정 정보 추가
     all_messages.append(
         "\n📌 설정\n"
         "• 가는 날: 2025-09-13 (강릉 → 울릉도)\n"
         "• 오는 날: 2025-09-14, 2025-09-15 (울릉도 → 강릉)"
     )
 
-    # 텔레그램 전송
     final_message = "\n\n".join(all_messages)
     send_telegram_message(BOT_TOKEN, CHAT_ID, final_message)
