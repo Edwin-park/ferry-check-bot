@@ -1,9 +1,9 @@
 name: Check Ferry Schedule
 
 on:
-  schedule:
+#  schedule:
     # 매일 15분 간격 실행 (UTC 기준: 한국은 +9시간)
-    - cron: '0,15,30,45 * * * *'
+#    - cron: '0,15,30,45 * * * *'
   workflow_dispatch:  # ✅ 수동 실행 트리거 추가
 
 jobs:
