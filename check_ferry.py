@@ -1,9 +1,11 @@
 import os
 import requests
 
+# 환경변수에서 BOT_TOKEN, CHAT_ID 가져오기
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
 
+# 텔레그램 메시지 전송 함수
 def send_telegram_message(bot_token, chat_id, message):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {"chat_id": chat_id, "text": message}
@@ -13,7 +15,8 @@ def send_telegram_message(bot_token, chat_id, message):
     except Exception as e:
         print("❗ 텔레그램 전송 오류:", e)
 
-def get_ferry_info(date: str) -> str:
+# 날짜별 배편 정보 조회 함수
+def get_ferry_info(date: str, t_portid: str, f_portid: str, title: str) -> str:
     url = "https://island.theksa.co.kr/booking/selectDepartureList"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -26,9 +29,9 @@ def get_ferry_info(date: str) -> str:
     data = {
         "masterdate": date,
         "t_portsubidlist": "1",
-        "t_portidlist": "4311",
+        "t_portidlist": t_portid,
         "f_portsubidlist": "0",
-        "f_portidlist": "4406",
+        "f_portidlist": f_portid,
         "lang": "ko",
         "sourcesiteid": "1PHSOBKSACLAIOD1XZMZ"
     }
@@ -39,7 +42,7 @@ def get_ferry_info(date: str) -> str:
         result_all = response.json().get("data", {}).get("resultAll", [])
 
         if not result_all:
-            return f"\n🛳️ {date} 배편 없음"
+            return f"\n🛳️ {title} ({date})\n• 배편 없음"
 
         grouped = {}
         for item in result_all:
@@ -54,7 +57,7 @@ def get_ferry_info(date: str) -> str:
             key = (vessel, departure, arrival, duration)
             grouped.setdefault(key, []).append((seat_type, onlinecnt, capacity))
 
-        lines = [f"🛳️ {date} 배편 현황"]
+        lines = [f"🛳️ {title} ({date})"]
         for (vessel, dep, arr, duration), seats in grouped.items():
             lines.append(f"- {vessel} ({dep} → {arr} / {duration})")
             for seat_type, online, cap in seats:
@@ -63,17 +66,24 @@ def get_ferry_info(date: str) -> str:
         return "\n".join(lines)
 
     except Exception as e:
-        return f"❗ [{date}] 오류 발생: {e}"
+        return f"❗ {title} ({date}) 오류 발생: {e}"
 
+# 메인 실행
 if __name__ == "__main__":
-    dates = ["2025-09-13", "2025-08-30"]
-    all_messages = []
+    # 날짜 및 방향 설정: (날짜, 출발지 ID, 도착지 ID, 제목)
+    routes = [
+        ("2025-09-13", "4311", "4406", "가는 편: 강릉 → 울릉도"),
+        ("2025-09-15", "4406", "4311", "오는 편: 울릉도 → 강릉"),
+    ]
 
-    for date in dates:
-        info = get_ferry_info(date)
+    all_messages = []
+    for date, t_port, f_port, title in routes:
+        info = get_ferry_info(date, t_port, f_port, title)
         all_messages.append(info)
 
-    all_messages.append("\n📌 설정\n• 날짜: 2025-09-13, 2025-08-30\n")
+    # 설정 정보 추가
+    all_messages.append("\n📌 설정\n• 가는 날: 2025-09-13 (강릉 → 울릉도)\n• 오는 날: 2025-09-15 (울릉도 → 강릉)")
 
+    # 텔레그램 전송
     final_message = "\n\n".join(all_messages)
     send_telegram_message(BOT_TOKEN, CHAT_ID, final_message)
